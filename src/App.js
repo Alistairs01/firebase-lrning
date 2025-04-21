@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import './App.css';
 import { Auth } from './components/auth';
-import { db } from './config/firebase'; 
+import { db, auth } from './config/firebase'; 
 import { getDocs, collection, addDoc, deleteDoc, updateDoc, doc } from "firebase/firestore";
 
 function App() {
@@ -14,6 +14,11 @@ function App() {
   const [newMovieTitle, setNewMovieTitle] = useState("");
   const [newReleaseDate, setNewReleaseDate] = useState(0);
   const [ isOscar, setIsOscar] = useState(true);
+  //UPDATE TITLE STATE
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [updateReleaseDate, setUpdateReleaseDate] = useState(0);
+  const [updateOscar, setUpdateOscar] = useState(false);
+
 
   //move getmovie function outside of useEffect
   const getMovieList = async () => {
@@ -40,7 +45,8 @@ function App() {
     await addDoc(movieListRef, {
       title: newMovieTitle,
       releaseDate: newReleaseDate,
-      receviedAnOscar: isOscar
+      receviedAnOscar: isOscar,
+      userId: auth?.currentUser?.uid
     });
     getMovieList();
   } catch (error) {
@@ -56,7 +62,17 @@ function App() {
       console.log(error);
     }
   };
-   
+   const updateMovieTitle = async (id) => {
+    try {
+      const movieDoc = doc(db, "movies", id);
+      await updateDoc(movieDoc, {
+        title: updateTitle
+      });
+      getMovieList();
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="App">
       FIREBASE COURSE
@@ -75,6 +91,8 @@ function App() {
             <h1 style={{color: movie.receviedAnOscar ? "green" : "red"}}> {movie.title} </h1>
             <p> Date: {movie.releaseDate}</p>
             <button onClick={() => {deleteMovie(movie.id)}}>Delete</button>
+            <input type="text" placeholder='new title' onChange={(event) => {setUpdateTitle(event.target.value)}} />
+            <button onClick={() => {updateMovieTitle(movie.id)}}>Update Title</button>
           </div>
         ))}
        </div>
